@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -28,9 +27,7 @@ body{
     position:relative;
 }
 
-h1,h2{
-    text-align:center;
-}
+h1,h2{text-align:center;}
 
 .lock-btn{
     position:absolute;
@@ -45,9 +42,7 @@ h1,h2{
     cursor:pointer;
 }
 
-.lock-btn:hover{
-    opacity:1;
-}
+.lock-btn:hover{opacity:1;}
 
 input{
     width:100%;
@@ -70,13 +65,8 @@ button{
     cursor:pointer;
 }
 
-.btn-secondary{
-    background:#6c757d;
-}
-
-.btn-danger{
-    background:#dc3545;
-}
+.btn-secondary{background:#6c757d;}
+.btn-danger{background:#dc3545;}
 
 .entry{
     background:#fafafa;
@@ -129,10 +119,6 @@ img{
     margin-top:10px;
 }
 
-.deadline-box{
-    margin-top:10px;
-}
-
 .deadline-on{
     background:red;
     color:white;
@@ -165,7 +151,7 @@ img{
     <button onclick="submitData()">제출하기</button>
 </div>
 
-<div id="deadlineStatus" class="deadline-box"></div>
+<div id="deadlineStatus"></div>
 
 <div class="capacity" id="capacityText"></div>
 
@@ -176,486 +162,263 @@ img{
 <hr>
 
 <h2>제출 명단</h2>
-
 <div id="list"></div>
 
 <div id="adminControls" style="display:none;">
-
     <input type="number" id="totalPeople" placeholder="전체 인원 설정">
-
     <button onclick="setCapacity()">인원 설정</button>
-
-    <button onclick="toggleDeadline()" class="btn-secondary">
-        제출마감 토글
-    </button>
-
-    <button onclick="downloadReceiptsZip()" class="btn-secondary">
-        ZIP 다운로드
-    </button>
-
-    <button onclick="openPwModal()" class="btn-secondary">
-        비밀번호 변경
-    </button>
-
-    <button onclick="openResetModal()" class="btn-danger">
-        전체 초기화
-    </button>
-
+    <button onclick="toggleDeadline()" class="btn-secondary">제출마감</button>
+    <button onclick="downloadReceiptsZip()" class="btn-secondary">ZIP 다운로드</button>
+    <button onclick="openPwModal()" class="btn-secondary">비밀번호 변경</button>
+    <button onclick="openResetModal()" class="btn-danger">전체 초기화</button>
 </div>
 
 </div>
 
 <!-- 관리자 로그인 -->
 <div class="modal" id="adminModal">
-    <div class="modal-content">
-
-        <h3>관리자 로그인</h3>
-
-        <input type="password" id="adminPassword">
-
-        <button onclick="checkAdminPassword()">로그인</button>
-
-        <button onclick="closeAdminModal()" class="btn-secondary">
-            취소
-        </button>
-
-    </div>
+<div class="modal-content">
+<h3>관리자 로그인</h3>
+<input type="password" id="adminPassword">
+<button onclick="checkAdminPassword()">로그인</button>
+<button onclick="closeAdminModal()" class="btn-secondary">취소</button>
+</div>
 </div>
 
 <!-- 비밀번호 변경 -->
 <div class="modal" id="pwModal">
-    <div class="modal-content">
-
-        <h3>비밀번호 변경</h3>
-
-        <input type="password" id="currentPw" placeholder="현재 비밀번호">
-
-        <input type="password" id="newPw" placeholder="새 비밀번호">
-
-        <button onclick="confirmChangePw()">변경하기</button>
-
-        <button onclick="closePwModal()" class="btn-secondary">
-            취소
-        </button>
-
-    </div>
+<div class="modal-content">
+<h3>비밀번호 변경</h3>
+<input type="password" id="currentPw" placeholder="현재 비밀번호">
+<input type="password" id="newPw" placeholder="새 비밀번호">
+<button onclick="confirmChangePw()">변경</button>
+<button onclick="closePwModal()" class="btn-secondary">취소</button>
+</div>
 </div>
 
-<!-- 전체 초기화 -->
+<!-- 초기화 -->
 <div class="modal" id="resetModal">
-    <div class="modal-content">
-
-        <h3>전체 초기화</h3>
-
-        <p style="font-size:12px;color:red;">
-            정말 모든 데이터를 삭제하시겠습니까?
-        </p>
-
-        <input type="password" id="resetPassword" placeholder="관리자 비밀번호 확인">
-
-        <button onclick="confirmReset()" class="btn-danger">
-            삭제
-        </button>
-
-        <button onclick="closeResetModal()" class="btn-secondary">
-            취소
-        </button>
-
-    </div>
+<div class="modal-content">
+<h3>전체 초기화</h3>
+<input type="password" id="resetPassword" placeholder="비밀번호">
+<button onclick="confirmReset()" class="btn-danger">삭제</button>
+<button onclick="closeResetModal()" class="btn-secondary">취소</button>
+</div>
 </div>
 
 <script>
-
 const firebaseConfig = {
   apiKey: "AIzaSyB6ekDeGRtDKWfOIJkQ_PVt9peiVG25TyI",
   authDomain: "ulsan-breakfast.firebaseapp.com",
   projectId: "ulsan-breakfast",
-  storageBucket: "ulsan-breakfast.firebasestorage.app",
-  messagingSenderId: "880211242754",
-  appId: "1:880211242754:web:2c5b14f8ed516919571c1b",
   databaseURL: "https://ulsan-breakfast-default-rtdb.asia-southeast1.firebasedatabase.app"
 };
 
 firebase.initializeApp(firebaseConfig);
-
 const db = firebase.database();
 
 let ADMIN_PASSWORD = "admin1234";
-
-const ADMIN_TIMEOUT = 5 * 60 * 1000;
-
 let isAdmin = false;
-let adminTimer = null;
 let isClosed = false;
 let totalPeople = 0;
 let currentData = [];
 
-/* 실시간 데이터 감시 */
+/* realtime */
 db.ref().on("value", (snapshot)=>{
-
-    const allData = snapshot.val() || {};
-
-    const breakfast = allData.breakfast || {};
+    const all = snapshot.val() || {};
+    const breakfast = all.breakfast || {};
+    const settings = all.settings || {};
 
     currentData = Object.values(breakfast);
-
-    const settings = allData.settings || {};
-
     totalPeople = settings.totalPeople || 0;
-
     isClosed = settings.isClosed || false;
-
-    if(settings.adminPassword){
-        ADMIN_PASSWORD = settings.adminPassword;
-    }
+    ADMIN_PASSWORD = settings.adminPassword || "admin1234";
 
     updateDeadlineUI();
     updateCapacity();
     renderList();
-
 });
 
-/* 관리자 버튼 */
-function toggleAdminByLock(){
-
-    if(isAdmin){
-        disableAdminMode();
-    }else{
-        openAdminModal();
-    }
-}
-
-function openAdminModal(){
-    document.getElementById("adminModal").style.display = "flex";
-}
-
-function closeAdminModal(){
-    document.getElementById("adminModal").style.display = "none";
-}
-
-/* 제출 */
+/* submit */
 function submitData(){
+    if(isClosed) return alert("마감됨");
 
-    if(isClosed){
-        alert("제출 마감됨");
-        return;
-    }
+    const name = document.getElementById("name").value.trim();
+    const amount = document.getElementById("amount").value.trim();
+    const file = document.getElementById("receipt").files[0];
 
-    const nameInput = document.getElementById("name");
-    const amountInput = document.getElementById("amount");
-    const receiptInput = document.getElementById("receipt");
-
-    const name = nameInput.value.trim();
-    const amount = amountInput.value.trim();
-    const file = receiptInput.files[0];
-
-    if(!name || !amount || !file){
-        alert("이름, 금액, 파일 모두 입력해주세요.");
-        return;
-    }
+    if(!name || !amount || !file) return alert("입력 필요");
 
     const reader = new FileReader();
-
-    reader.onload = function(e){
-
+    reader.onload = e=>{
         db.ref("breakfast").push({
-
-            name:name,
-            amount:amount,
-            receipt:e.target.result,
-            fileName:file.name,
-            timestamp:Date.now()
-
-        })
-        .then(()=>{
-
-            alert("제출 완료");
-
-            nameInput.value = "";
-            amountInput.value = "";
-            receiptInput.value = "";
-
-        })
-        .catch((err)=>{
-
-            console.error(err);
-
-            alert("저장 실패");
-
+            name,
+            amount,
+            receipt: e.target.result,
+            fileName: file.name,
+            timestamp: Date.now()
         });
-
     };
-
     reader.readAsDataURL(file);
 }
 
-/* 명단 출력 */
+/* render */
 function renderList(){
-
     const list = document.getElementById("list");
-
     list.innerHTML = "";
 
-    const sorted = [...currentData]
-    .sort((a,b)=>a.name.localeCompare(b.name,"ko"));
+    const sorted = [...currentData].sort((a,b)=>
+        a.name.localeCompare(b.name,"ko")
+    );
 
     sorted.forEach(item=>{
-
         const div = document.createElement("div");
-
-        div.className = "entry";
+        div.className="entry";
 
         if(isAdmin){
-
-            let preview = "";
-
-            if(item.receipt.includes("application/pdf")){
-
-                preview =
-                `<div class="pdf-placeholder">
-                    📄 PDF (${item.name})
-                </div>`;
-
-            }else{
-
-                preview =
-                `<img src="${item.receipt}">`;
-
-            }
+            const preview = item.receipt.includes("pdf")
+                ? `<div class="pdf-placeholder">📄 PDF</div>`
+                : `<img src="${item.receipt}">`;
 
             div.innerHTML = `
                 <b>${item.name}</b><br>
                 ${item.amount}원<br>
                 ${preview}
             `;
-
-        }else{
-
+        } else {
             div.innerHTML = `<b>${item.name}</b>`;
-
         }
 
         list.appendChild(div);
-
     });
 }
 
-/* 인원 설정 */
-function setCapacity(){
-
-    const val = parseInt(
-        document.getElementById("totalPeople").value
-    );
-
-    if(!val){
-        return;
-    }
-
-    db.ref("settings/totalPeople").set(val);
+/* admin */
+function toggleAdminByLock(){
+    isAdmin ? disableAdminMode() : openAdminModal();
 }
 
-function updateCapacity(){
-
-    const submitted = currentData.length;
-
-    document.getElementById("capacityText").innerText =
-        totalPeople
-        ? `${totalPeople - submitted}/${totalPeople}`
-        : "";
+function openAdminModal(){
+    document.getElementById("adminModal").style.display="flex";
 }
 
-/* 관리자 로그인 */
+function closeAdminModal(){
+    document.getElementById("adminModal").style.display="none";
+}
+
 function checkAdminPassword(){
+    const v = document.getElementById("adminPassword").value;
 
-    const input = document.getElementById("adminPassword");
-
-    if(input.value === ADMIN_PASSWORD){
-
+    if(v === ADMIN_PASSWORD){
         isAdmin = true;
-
-        document.getElementById("adminControls").style.display = "block";
-
-        document.getElementById("adminStatus").style.display = "block";
-
+        document.getElementById("adminControls").style.display="block";
+        document.getElementById("adminStatus").style.display="block";
         closeAdminModal();
-
         renderList();
-
-        clearTimeout(adminTimer);
-
-        adminTimer = setTimeout(()=>{
-
-            disableAdminMode();
-
-        }, ADMIN_TIMEOUT);
-
-    }else{
-
-        alert("비밀번호 틀림");
-
+    } else {
+        alert("비번 틀림");
     }
 
-    input.value = "";
+    document.getElementById("adminPassword").value="";
 }
 
 function disableAdminMode(){
-
     isAdmin = false;
-
-    document.getElementById("adminControls").style.display = "none";
-
-    document.getElementById("adminStatus").style.display = "none";
-
+    document.getElementById("adminControls").style.display="none";
+    document.getElementById("adminStatus").style.display="none";
     renderList();
 }
 
-/* 제출 마감 */
-function toggleDeadline(){
+/* capacity */
+function setCapacity(){
+    const v = parseInt(document.getElementById("totalPeople").value);
+    if(v) db.ref("settings/totalPeople").set(v);
+}
 
+function updateCapacity(){
+    const submitted = currentData.length;
+    document.getElementById("capacityText").innerText =
+        totalPeople ? `${totalPeople-submitted}/${totalPeople}` : "";
+}
+
+/* deadline */
+function toggleDeadline(){
     db.ref("settings/isClosed").set(!isClosed);
 }
 
 function updateDeadlineUI(){
+    document.getElementById("submitArea").style.display =
+        isClosed ? "none" : "block";
 
-    const area = document.getElementById("submitArea");
-
-    const box = document.getElementById("deadlineStatus");
-
-    area.style.display = isClosed ? "none" : "block";
-
-    box.innerHTML = isClosed
-    ? `<div class="deadline-on">🚫 제출 마감 상태</div>`
-    : "";
+    document.getElementById("deadlineStatus").innerHTML =
+        isClosed ? `<div class="deadline-on">🚫 마감</div>` : "";
 }
 
-/* 비밀번호 변경 */
-function openPwModal(){
+/* pw */
+function openPwModal(){pwModal.style.display="flex";}
 
-    document.getElementById("pwModal").style.display = "flex";
-}
-
+/* 🔥 수정 */
 function closePwModal(){
-
-    document.getElementById("pwModal").style.display = "none";
+    document.getElementById("pwModal").style.display="none";
+    document.getElementById("currentPw").value = "";
+    document.getElementById("newPw").value = "";
 }
 
 function confirmChangePw(){
+    const cur = currentPw.value;
+    const next = newPw.value;
 
-    const currentPw =
-    document.getElementById("currentPw").value;
+    if(cur !== ADMIN_PASSWORD) return alert("틀림");
+    if(next.length < 4) return alert("4자리 이상");
 
-    const newPw =
-    document.getElementById("newPw").value;
-
-    if(currentPw !== ADMIN_PASSWORD){
-
-        alert("현재 비밀번호가 틀렸습니다.");
-        return;
-    }
-
-    if(!newPw || newPw.length < 4){
-
-        alert("새 비밀번호를 4자리 이상 입력해주세요.");
-        return;
-    }
-
-    db.ref("settings/adminPassword")
-    .set(newPw)
-    .then(()=>{
-
-        ADMIN_PASSWORD = newPw;
-
-        alert("비밀번호 변경 완료");
-
-        document.getElementById("currentPw").value = "";
-        document.getElementById("newPw").value = "";
-
-        closePwModal();
-
-    })
-    .catch(()=>{
-
-        alert("비밀번호 변경 실패");
-
-    });
+    db.ref("settings").update({adminPassword: next});
+    ADMIN_PASSWORD = next;
+    closePwModal();
 }
 
-/* 전체 초기화 */
-function openResetModal(){
+/* reset */
+function openResetModal(){resetModal.style.display="flex";}
 
-    document.getElementById("resetModal").style.display = "flex";
-}
-
+/* 🔥 수정 */
 function closeResetModal(){
-
-    document.getElementById("resetModal").style.display = "none";
+    document.getElementById("resetModal").style.display="none";
+    document.getElementById("resetPassword").value = "";
 }
 
 function confirmReset(){
+    if(resetPassword.value !== ADMIN_PASSWORD)
+        return alert("틀림");
 
-    const pw =
-    document.getElementById("resetPassword").value;
-
-    if(pw !== ADMIN_PASSWORD){
-
-        alert("비밀번호 틀림");
-        return;
-    }
-
-    db.ref("breakfast")
-    .remove()
-    .then(()=>{
-
-        alert("전체 삭제 완료");
-
-        closeResetModal();
-
-    })
-    .catch(()=>{
-
-        alert("삭제 실패");
-
-    });
+    db.ref("breakfast").remove();
 }
 
-/* ZIP 다운로드 */
+/* ZIP */
 async function downloadReceiptsZip(){
-
     const zip = new JSZip();
+    const month = new Date().getMonth()+1;
 
-    currentData.forEach((item,index)=>{
+    currentData.forEach(item=>{
+        if(!item.receipt) return;
 
-        if(item.receipt){
+        const base64 = item.receipt.split(",")[1];
+        const ext = item.fileName.split(".").pop();
 
-            const base64 =
-            item.receipt.split(",")[1];
+        const safeName = item.name.replace(/[\\/:*?"<>|]/g, "");
 
-            const extension =
-            item.fileName.split(".").pop();
-
-            zip.file(
-                `${item.name}_${index}.${extension}`,
-                base64,
-                {base64:true}
-            );
-        }
-
+        zip.file(
+            `${month}월 조식 ${safeName}.${ext}`,
+            base64,
+            { base64:true }
+        );
     });
 
-    const content =
-    await zip.generateAsync({type:"blob"});
-
+    const blob = await zip.generateAsync({type:"blob"});
     const a = document.createElement("a");
-
-    a.href = URL.createObjectURL(content);
-
-    a.download = "receipts.zip";
-
+    a.href = URL.createObjectURL(blob);
+    a.download = `${month}월_조식.zip`;
     a.click();
 }
-
 </script>
 
 </body>
 </html>
-```
