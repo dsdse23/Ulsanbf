@@ -239,7 +239,7 @@ db.ref().on("value", (snapshot)=>{
     renderList();
 });
 
-/* submit */
+/* submit (🔥 수정된 부분) */
 function submitData(){
     if(isClosed) return alert("마감됨");
 
@@ -258,7 +258,25 @@ function submitData(){
             fileName: file.name,
             timestamp: Date.now()
         });
+
+        // 🔥 입력값 초기화
+        document.getElementById("name").value = "";
+        document.getElementById("amount").value = "";
+        document.getElementById("receipt").value = "";
+
+        // 🔥 버튼 상태 변경
+        const btn = document.querySelector("#submitArea button");
+        const origin = btn.innerText;
+
+        btn.innerText = "제출되었습니다";
+        btn.style.background = "#28a745";
+
+        setTimeout(()=>{
+            btn.innerText = origin;
+            btn.style.background = "#007bff";
+        }, 1500);
     };
+
     reader.readAsDataURL(file);
 }
 
@@ -357,11 +375,10 @@ function updateDeadlineUI(){
 /* pw */
 function openPwModal(){pwModal.style.display="flex";}
 
-/* 🔥 수정 */
 function closePwModal(){
     document.getElementById("pwModal").style.display="none";
-    document.getElementById("currentPw").value = "";
-    document.getElementById("newPw").value = "";
+    document.getElementById("currentPw").value="";
+    document.getElementById("newPw").value="";
 }
 
 function confirmChangePw(){
@@ -379,10 +396,9 @@ function confirmChangePw(){
 /* reset */
 function openResetModal(){resetModal.style.display="flex";}
 
-/* 🔥 수정 */
 function closeResetModal(){
     document.getElementById("resetModal").style.display="none";
-    document.getElementById("resetPassword").value = "";
+    document.getElementById("resetPassword").value="";
 }
 
 function confirmReset(){
